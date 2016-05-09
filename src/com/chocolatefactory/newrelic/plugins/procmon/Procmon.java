@@ -89,27 +89,49 @@ public class Procmon extends Agent {
 			BufferedReader commandOutput = new BufferedReader(new InputStreamReader(tasklist.getInputStream()));
 
 			while ((line = commandOutput.readLine()) != null) {
+
+				if (this.debug) {
+					System.out.println("The current line from PowerShell output is " + line);
+				}
+				
 				if (line.contains("Directory:")) {
 
 					if (line.lastIndexOf(":") > line.indexOf("Directory:")+"Directory:".length()) {
 						directory = line.substring(line.indexOf("Directory:")+"Directory:".length()+1);
+						if (this.debug) {
+							System.out.println("PID Directory is " + directory);
+						}
+						break;
 					} else {
 						line = commandOutput.readLine();
 						directory = line.substring(line.lastIndexOf(":")-1);
+						if (this.debug) {
+							System.out.println("PID Directory is " + directory);
+						}
+						break;
+						}
 					}
-				if (this.debug) {
-					System.out.println("Directory is " + directory);
 				}
-				}
-			}
 		} catch (Exception e) {
 			System.out.println("Encountered an error attempting to get the PID file " + this.command);
 			e.printStackTrace();
-		}
+			}
 		
 		try {
+			// Format the directory name
+			String formattedDirectory = directory.replace("\\", "\\\\");
+			
+			// Add an ending backslash if not present
+			if (line.lastIndexOf("\\") < line.length()) {
+				formattedDirectory += 	"\\\\";
+			}
+			
+			if (this.debug) {
+				System.out.println("Formatted Directory is " + formattedDirectory);
+			}
+			
             //open the PID file for reading
-            FileInputStream file = new FileInputStream(directory+"\\"+this.command);
+            FileInputStream file = new FileInputStream(formattedDirectory+this.command);
             BufferedReader reader = new BufferedReader(new InputStreamReader(file));
           
             //reading the PID from file

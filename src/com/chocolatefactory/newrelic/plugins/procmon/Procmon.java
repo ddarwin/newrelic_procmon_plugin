@@ -101,6 +101,11 @@ public class Procmon extends Agent {
 						if (this.debug) {
 							System.out.println("PID Directory is " + directory);
 						}
+						System.out.println("Wow! Here's the latest line: " + line);
+						line = commandOutput.readLine();
+						if (line != null) {
+							directory += line.trim();
+						}
 						break;
 					} else {
 						line = commandOutput.readLine();
@@ -109,7 +114,7 @@ public class Procmon extends Agent {
 							System.out.println("PID Directory is " + directory);
 						}
 						break;
-						}
+						}    
 					}
 				}
 		} catch (Exception e) {

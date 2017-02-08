@@ -27,7 +27,7 @@ public class Main {
 		}
 		
 		if (pluginConfig.hasPath("name") && !pluginConfig.getString("name").equals("auto")) {
-			thisName = pluginConfig.getString("name").toLowerCase();
+			thisName = pluginConfig.getString("name");
 		} else {
 			thisName = InetAddress.getLocalHost().getHostName();
 		}

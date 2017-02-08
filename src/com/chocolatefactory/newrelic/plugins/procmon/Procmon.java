@@ -61,7 +61,7 @@ public class Procmon extends Agent {
 	public void pollCycle() {
 		if(this.ostype.indexOf("win") >= 0) {
 			if (this.debug) {
-				System.out.println("Currently checking Windows process: " + this.command);
+				System.out.println("Currently checking Windows process from file, " + this.command);
 			}
 			HashMap <String, Number> outputHash = winProcCommand();
 			for (Entry<String, Number> thisMetric : outputHash.entrySet()) {
@@ -98,13 +98,13 @@ public class Procmon extends Agent {
 
 					if (line.lastIndexOf(":") > line.indexOf("Directory:")+"Directory:".length()) {
 						directory = line.substring(line.indexOf("Directory:")+"Directory:".length()+1);
-						if (this.debug) {
-							System.out.println("PID Directory is " + directory);
-						}
-						System.out.println("Wow! Here's the latest line: " + line);
+
 						line = commandOutput.readLine();
 						if (line != null) {
 							directory += line.trim();
+						}
+						if (this.debug) {
+							System.out.println("The current line from PowerShell output is " + line);
 						}
 						break;
 					} else {

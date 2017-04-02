@@ -2,10 +2,10 @@
 	"agents": [
 	{
 		"OS": "auto",
-		"debug": true,
+		"debug": false,
 		"name": "auto",
-		"PID_Location": "C:\\Users\\Administrator",
-		"PID_File": "test.pid"
+		"PID_Location": "C:\\",
+		"PID_File": "example.pid"
 	}
 	]
 }

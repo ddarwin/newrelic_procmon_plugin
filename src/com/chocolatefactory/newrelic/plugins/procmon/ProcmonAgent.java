@@ -12,8 +12,13 @@ import java.util.Map.Entry;
 
 import com.newrelic.metrics.publish.Agent;
 
-public class Procmon extends Agent {
+public class ProcmonAgent extends Agent {
 	
+
+    private static final String GUID = "com.chocolatefactory.newrelic.plugins.procmon";
+    private static final String VERSION = "0.0.3";
+	
+	public static final String kProc = "Process";  
 	public static final String kProcCount = "Process Count";
 	public static final String kMemUsage = "Memory Usage";
 	public static final String kCPUTime = "CPU Time";
@@ -33,42 +38,48 @@ public class Procmon extends Agent {
 	        return super.get(key);
 	    }
 	{
-	    put(kProcCount, "processes");
-	    put(kMemUsage, "kb");
-	    put(kCPUTime, "seconds");
-	    put(kProcStatus, "status");
+	    put(kProcCount, kProcCountType);
+	    put(kMemUsage, kMemUsageType);
+	    put(kCPUTime, kCPUTimeType);
+	    put(kProcStatus, kProcStatusType);
 	}};
-			
-	String command, hostname, ostype, name, location;
-	Boolean debug;
+	
+	private String file, ostype, name, location;
+	Boolean debug;	
     
-	public Procmon(String guid, String agentversion, String hostname, String ostype, String location, String command, Boolean debug) {
-		super(guid, agentversion);
+	public ProcmonAgent(String osType, String name, String location, String file, Boolean debug) {
+        super(GUID, VERSION);
+        this.ostype = osType;
+        this.name = name + " - " + file;
 		this.location = location;
-		this.command = command;
-		this.ostype = ostype;
+		this.file = file;
 		this.debug = debug;
-		this.hostname = hostname;
-		this.name = hostname + " - " + command;
 	}
 
 	@Override
-	public String getComponentHumanLabel() {
+	public String getAgentName() {
 		return this.name;
 	}
 	
 	@Override
 	public void pollCycle() {
+		if (this.debug) {
+			System.out.println("Entered the pollCycle");
+			System.out.println("OS Type is "+ostype);
+			System.out.println("name is "+name);
+			System.out.println("location is "+location);
+			System.out.println("file is "+file);
+		}
+
 		if(this.ostype.indexOf("win") >= 0) {
 			if (this.debug) {
-				System.out.println("Currently checking Windows process from file, " + this.command);
+				System.out.println("Currently checking Windows process from file, " + this.file);
 			}
 			HashMap <String, Number> outputHash = winProcCommand();
 			for (Entry<String, Number> thisMetric : outputHash.entrySet()) {
 			    String key = thisMetric.getKey();
 			    Number value = thisMetric.getValue();
 			    String type = kMetricTypes.get(key);
-			    //reportMetric(kMetricPrefix + key, type, value); 
 			    reportMetric(key, type, value);  
 			}
 		}
@@ -78,10 +89,10 @@ public class Procmon extends Agent {
 		String line = "";
 		String directory = "";
 		String PIDVal = "";
-		String getFileCmdString = "powershell.exe -Command Get-ChildItem -recurse " + this.location + " -include " + this.command;
+		String getFileCmdString = "powershell.exe -Command Get-ChildItem -recurse " + this.location + " -include " + this.file;
 
 		if (this.debug) {
-			System.out.println("The command string is " + getFileCmdString);
+			System.out.println("The powershell command is " + getFileCmdString);
 		}
 		
 		try {
@@ -118,7 +129,7 @@ public class Procmon extends Agent {
 					}
 				}
 		} catch (Exception e) {
-			System.out.println("Encountered an error attempting to get the PID file " + this.command);
+			System.out.println("Encountered an error attempting to get the PID file " + this.file);
 			e.printStackTrace();
 			}
 		
@@ -136,7 +147,7 @@ public class Procmon extends Agent {
 			}
 			
             //open the PID file for reading
-            FileInputStream file = new FileInputStream(formattedDirectory+this.command);
+            FileInputStream file = new FileInputStream(formattedDirectory+this.file);
             BufferedReader reader = new BufferedReader(new InputStreamReader(file));
           
             //reading the PID from file
@@ -150,10 +161,10 @@ public class Procmon extends Agent {
             reader.close();
                   
         } catch (FileNotFoundException ex) {
-			System.out.println("Encountered an error attempting to check process " + this.command);
+			System.out.println("Encountered an error attempting to check process " + this.file);
 			ex.printStackTrace();
         } catch (IOException ex) {
-			System.out.println("Encountered an error attempting to check process " + this.command);
+			System.out.println("Encountered an error attempting to check process " + this.file);
 			ex.printStackTrace();
         }
 		return PIDVal;
@@ -226,7 +237,7 @@ public class Procmon extends Agent {
 			
 			tasklistOutput.close();
 		} catch (Exception e) {
-			System.out.println("Encountered an error attempting to check process " + this.command);
+			System.out.println("Encountered an error attempting to check process " + this.file);
 			e.printStackTrace();
 		} 
 		

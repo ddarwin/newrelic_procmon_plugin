@@ -15,7 +15,16 @@ public class ProcmonAgentFactory extends AgentFactory {
 
 	@Override
     public Agent createConfiguredAgent(Map<String, Object> properties) throws ConfigurationException {
-		System.out.println("Entered ProcmonAgentFactory");
+    	
+    	if (properties.containsKey("debug")) {
+    		this.debug = (Boolean) properties.get("debug");
+    	} else {
+    		this.debug = false;
+    	}
+		
+    	if (this.debug) {
+			System.out.println("Entered ProcmonAgentFactor.\n");
+		}
     	
     	if (properties.containsKey("OS")) {
     		this.osType  = (String) properties.get("OS");
@@ -23,8 +32,13 @@ public class ProcmonAgentFactory extends AgentFactory {
     		this.osType = "auto";
     	}
 
+    	if (this.debug) {
+    		System.out.print("About to get the OS Type.\n");
+    	}
+    	
     	if (this.osType.equals("auto")) {
     		this.osType = System.getProperty("os.name").toLowerCase();
+    		System.out.println("The OS Type value is "+osType);
     	}
       	
     	if (properties.containsKey("name")) {
@@ -33,21 +47,22 @@ public class ProcmonAgentFactory extends AgentFactory {
     		this.name = "auto";
     	}
     	
+    	if (this.debug) {
+    		System.out.print("About to get the System name.\n");
+    	}
+    	
     	if (this.name.equals("auto")) {
 			try {
-				name = InetAddress.getLocalHost().getHostName();
+				this.name = InetAddress.getLocalHost().getHostName();
+				if (this.debug) {
+					System.out.println("The system name value returned is "+this.name);
+				}
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     	}
-    	
-    	if (properties.containsKey("debug")) {
-    		this.debug = (Boolean) properties.get("debug");
-    	} else {
-    		this.debug = false;
-    	}
-		
+
 		if (properties.containsKey("PID_Location")) {
 			this.location = (String) properties.get("PID_Location");
 		} else {
@@ -59,7 +74,20 @@ public class ProcmonAgentFactory extends AgentFactory {
 		} else {
             throw new ConfigurationException("Property 'PID_File' must be specified in plugin.json and cannot be null.");
 		}
-        
-        return new ProcmonAgent(this.osType, this.name, this.location, this.file, this.debug);
-    }
+
+
+		// Determine which OS to monitor
+		if(this.osType.contains("mac os") || this.osType.contains("linux") || osType.contains("mac os")){
+			System.out.println("We are running in a Unix system");
+    		return new ProcmonUnixAgent(this.osType, this.name, this.location, this.file, this.debug);
+		} else {
+			if (this.osType.toLowerCase().contains("win")) {
+					System.out.println("We are running in a Windows system");
+					return new ProcmonWindowsAgent(this.osType, this.name, this.location, this.file, this.debug);
+			} else {
+				System.out.println("Unsupported OS");
+				return null;
+			}
+		}
+	}
 }
